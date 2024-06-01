@@ -84,7 +84,7 @@ fn arithmatic_casting() {
     //casting to f32
     let _casted = 3.7_f32;
     let _casted = 3.7f32;
-    let _casted = 3.7 as f32;
+    // let _casted = 3.7 as f32;
     //str conv
     let mut input = String::new();
     io::stdin()

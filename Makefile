@@ -1,4 +1,4 @@
 intro_proj:
 	cargo run -p intro
-quess_this:
+guess:
 	cargo run -p guess_this
