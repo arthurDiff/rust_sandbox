@@ -96,7 +96,7 @@ fn arithmatic_casting() {
 
 fn conditional() {
     let _cond = 2 < 9; // 2 < 3.9 is invalid need types to match
-    let _compound = !(2 < 9 && true || false);
+                       // let _compound = !((2 < 9 && true) || false);
 
     let food = "kbbq";
     if food == "kbbq" {
@@ -111,7 +111,7 @@ fn conditional() {
 fn function_info() {
     fn add_numbers(x: i32, y: i32) -> i32 {
         // x + y without ; will return as well
-        return x + y;
+        x + y
     }
     println!("{}", add_numbers(19, 3));
     let number = {
