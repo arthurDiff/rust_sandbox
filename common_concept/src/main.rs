@@ -23,13 +23,13 @@ fn fahrenheith_to_celsius(deg: i32) -> i32 {
     (deg - 32) * 5 / 9
 }
 
-fn fibonacci(n: usize) -> usize {
+fn fibonacci(nth: usize) -> usize {
     let mut cache = vec![0, 1];
-    if n <= 1 {
-        return n;
+    if nth <= 1 {
+        return nth;
     }
-    for i in 2..=n {
+    for i in 2..=nth {
         cache.push(cache[i - 1] + cache[i - 2]);
     }
-    cache[n]
+    cache[nth]
 }
