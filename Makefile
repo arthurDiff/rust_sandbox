@@ -6,3 +6,5 @@ common:
 	cargo run -p common_concept
 owner:
 	cargo run -p ownership
+struct:
+	cargo run -p struct_proj
