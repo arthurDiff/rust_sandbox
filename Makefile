@@ -4,3 +4,5 @@ guess:
 	cargo run -p guess_this
 common: 
 	cargo run -p common_concept
+owner:
+	cargo run -p ownership
