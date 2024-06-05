@@ -16,7 +16,19 @@ impl Rectangle {
     fn can_hold(&self, rect: &Rectangle) -> bool {
         rect.width < self.width && rect.height < self.height
     }
+    #[allow(dead_code)]
+    fn set_width(&mut self, width: u32) {
+        self.width = width;
+    }
+    #[allow(dead_code)]
+    fn clone(&self) -> Self {
+        Self {
+            width: self.width,
+            height: self.height,
+        }
+    }
 }
+
 fn main() {
     let rect = Rectangle::new(35, 88);
     let rect2 = Rectangle::new(23, 43);

@@ -8,3 +8,5 @@ owner:
 	cargo run -p ownership
 struct:
 	cargo run -p struct_proj
+enum:
+	cargo run -p enum_proj
