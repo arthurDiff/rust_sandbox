@@ -10,3 +10,7 @@ struct:
 	cargo run -p struct_proj
 enum:
 	cargo run -p enum_proj
+module:
+	cargo run -p module_sys
+collection:
+	cargo run -p collection_proj
