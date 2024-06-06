@@ -14,6 +14,7 @@ impl Breakfast {
     }
 }
 
+#[allow(dead_code)]
 pub enum Appetizer {
     Soup,
     Candy,

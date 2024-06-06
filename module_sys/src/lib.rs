@@ -1,4 +1,5 @@
 pub use crate::back_of_house::Breakfast as Lunch;
+#[allow(unused_imports)]
 use crate::front_of_house::{
     hosting::{self, restroom},
     serving,
@@ -29,8 +30,8 @@ mod back_of_house;
 fn eat_at_restaurant() {
     crate::front_of_house::hosting::add_to_waitlist();
     front_of_house::serving::take_order();
-    let lunch2 = crate::front_of_house::Lunch::summer("toast");
+    let _lunch2 = crate::front_of_house::Lunch::summer("toast");
     let breakfast = back_of_house::Breakfast::summer("Wheat");
     println!("{}", breakfast.toast);
-    let lunch = Lunch::summer("toast");
+    let _lunch = Lunch::summer("toast");
 }
