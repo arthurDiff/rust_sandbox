@@ -1,3 +1,3 @@
 [workspace]
 
-members = [ "collection_proj", "common_concept", "enum_proj", "guess_this","intro", "module_sys", "ownership", "struct_proj"]
+members = [ "collection_proj", "common_concept", "enum_proj", "error_handling", "guess_this","intro", "module_sys", "ownership", "struct_proj"]
