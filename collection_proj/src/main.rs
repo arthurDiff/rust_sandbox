@@ -18,6 +18,7 @@ fn get_median_and_mode(nums: Vec<i32>) -> (i32, i32) {
             medium = Some(*num);
         }
         let num_val = num_map.entry(*num).and_modify(|c| *c += 1).or_insert(1);
+
         if mode.1 < *num_val {
             mode = (*num, *num_val)
         }

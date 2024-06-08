@@ -14,3 +14,5 @@ module:
 	cargo run -p module_sys
 collection:
 	cargo run -p collection_proj
+generic:
+	cargo run -p generic_proj
