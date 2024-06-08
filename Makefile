@@ -16,3 +16,5 @@ collection:
 	cargo run -p collection_proj
 generic:
 	cargo run -p generic_proj
+testing:
+	cargo test -p test_proj -- --include-ignored
