@@ -18,3 +18,7 @@ generic:
 	cargo run -p generic_proj
 testing:
 	cargo test -p test_proj -- --include-ignored
+minigrep-test:
+	cargo test -p minigrep
+minigrep_proj:
+    IGNORE_CASE=1 cargo run -p minigrep -- genghis genghis-khan.txt
