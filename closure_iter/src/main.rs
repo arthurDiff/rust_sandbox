@@ -1,4 +1,4 @@
-use shirts::*;
+pub use shirts::*;
 use std::thread;
 
 mod iterator;

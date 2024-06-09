@@ -1,5 +1,5 @@
+use closure_iter::shirts;
 use std::io;
-
 fn main() {
     println!("Intro");
     intro();

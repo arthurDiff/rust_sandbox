@@ -24,3 +24,5 @@ minigrep_proj:
     IGNORE_CASE=1 cargo run -p minigrep -- genghis genghis-khan.txt
 closure_iter_proj:
 	cargo run -p closure_iter
+cargo_play_proj:
+	cargo test -p cargo_play
