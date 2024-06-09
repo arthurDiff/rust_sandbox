@@ -3,9 +3,7 @@ use std::{env, error::Error, fs};
 pub mod config;
 
 pub fn run() -> Result<(), Box<dyn Error>> {
-    let args: Vec<String> = env::args().collect();
-
-    let cfg = Config::build(&args)?;
+    let cfg = Config::build(env::args())?;
     // Config::build(&arg).unwrap_or_else(|err|{
     //     println!("{err}");
     // })
@@ -24,27 +22,15 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 }
 
 fn search<'a>(query: &str, content: &'a str) -> Vec<&'a str> {
-    let mut result = Vec::new();
-    for line in content.lines() {
-        if !line.contains(query) {
-            continue;
-        };
-        result.push(line.trim());
-    }
-    result
+    content.lines().filter(|l| l.contains(query)).collect()
 }
 
 fn search_case_insensitve<'a>(query: &str, content: &'a str) -> Vec<&'a str> {
-    let query = query.to_lowercase();
-    let mut result = Vec::new();
-
-    for line in content.lines() {
-        if !line.to_lowercase().contains(&query) {
-            continue;
-        }
-        result.push(line);
-    }
-    result
+    let query = &query.to_lowercase();
+    content
+        .lines()
+        .filter(|l| l.to_lowercase().contains(query))
+        .collect()
 }
 
 #[cfg(test)]
