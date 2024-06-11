@@ -26,3 +26,5 @@ closure_iter_proj:
 	cargo run -p closure_iter
 cargo_play_proj:
 	cargo test -p cargo_play
+smart_ptr_p:
+	cargo run -p smart_ptr

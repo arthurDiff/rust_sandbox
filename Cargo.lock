@@ -116,6 +116,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "smart_ptr"
+version = "0.1.0"
+
+[[package]]
 name = "struct_proj"
 version = "0.1.0"
 
