@@ -33,6 +33,10 @@ name = "error_handling"
 version = "0.1.0"
 
 [[package]]
+name = "fear_the_conr"
+version = "0.1.0"
+
+[[package]]
 name = "generic_proj"
 version = "0.1.0"
 

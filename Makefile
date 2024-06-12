@@ -28,3 +28,5 @@ cargo_play_proj:
 	cargo test -p cargo_play
 smart_ptr_p:
 	cargo run -p smart_ptr
+fear_the_conc_p:
+	cargo run -p fear_the_conr
