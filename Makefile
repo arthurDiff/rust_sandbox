@@ -32,3 +32,5 @@ fear_the_conc_p:
 	cargo run -p fear_the_conr
 oop:
 	cargo run -p oop_proj
+adv:
+	cargo run -p adv_proj
