@@ -34,3 +34,5 @@ oop:
 	cargo run -p oop_proj
 adv:
 	cargo run -p adv_proj
+hello_serv:
+	cargo run -p hello_server
