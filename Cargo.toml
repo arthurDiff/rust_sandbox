@@ -1,3 +1,3 @@
 [workspace]
 
-members = [ "adv_proj", "cargo_play", "closure_iter", "collection_proj", "common_concept", "enum_proj", "error_handling", "fear_the_conr", "generic_proj", "guess_this", "hello_macro_derive", "hello_server","intro", "match_proj", "minigrep", "module_sys", "oop-proj", "ownership", "smart_ptr", "struct_proj", "test_proj"]
+members = [ "adv_proj", "cargo_play", "clap_test", "closure_iter", "collection_proj", "common_concept", "enum_proj", "error_handling", "fear_the_conr", "generic_proj", "guess_this", "hello_macro_derive", "hello_server","intro", "match_proj", "minigrep", "module_sys", "oop-proj", "ownership", "smart_ptr", "struct_proj", "test_proj"]
