@@ -1,6 +1,0 @@
-[package]
-name = "fear_the_conr"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]

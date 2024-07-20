@@ -2,9 +2,6 @@
   <p>
     <h1>Rust Playground</h1>
   </p>
-  <p>
-    Me learning rust here.
-  </p>
 </div>
 
 ```
