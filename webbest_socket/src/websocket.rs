@@ -14,15 +14,15 @@ impl Websocket {
     pub fn new(stream: TcpStream) -> Self {
         Self { stream }
     }
-    pub fn connect(&mut self) -> Result<(), Box<dyn error::Error>> {
+    pub fn connect(&mut self) -> Result<(), WebsocketError> {
         let mut buffer = [0_u8; 1024];
 
         let byte_length = match self.stream.read(&mut buffer) {
             Ok(bytes) => bytes,
-            Err(e) => return Err(Box::new(WebsocketError::IoError(e))),
+            Err(e) => return Err(WebsocketError::new(e)),
         };
 
-        let request = str::from_utf8(&buffer[..byte_length])?;
+        let request = str::from_utf8(&buffer[..byte_length]).map_err(WebsocketError::new)?;
 
         if !request.starts_with("GET") {}
         Ok(())
@@ -30,18 +30,21 @@ impl Websocket {
 }
 
 #[derive(Debug)]
-pub struct WebsocketError;
+pub struct WebsocketError {
+    message: String,
+}
 
 impl WebsocketError {
-    pub fn IoError(e: io::Error) -> WebsocketError {
-        WebsocketError
+    pub fn new(e: impl Error) -> WebsocketError {
+        WebsocketError {
+            message: e.to_string(),
+        }
     }
 }
 impl Display for WebsocketError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "failed got error");
-        Ok(())
+        write!(f, "websocket error: {}", self.message)
     }
 }
 
-impl error::Error for WebsocketError {}
+impl Error for WebsocketError {}
