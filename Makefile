@@ -6,3 +6,5 @@ blockchain:
 	cargo run -p blockchain_p
 blockchain_test:
 	cargo test -p blockchain_p
+websocket:
+	cargo run -p webbest_socket
