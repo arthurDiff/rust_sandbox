@@ -8,3 +8,5 @@ blockchain_test:
 	cargo test -p blockchain_p
 websocket:
 	cargo run -p webbest_socket
+sha:
+	cargo run -p sha1
