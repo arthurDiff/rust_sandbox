@@ -178,6 +178,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "mt_web_serv"
+version = "0.1.0"
+
+[[package]]
 name = "object"
 version = "0.36.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
