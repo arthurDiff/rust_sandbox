@@ -1,3 +1,5 @@
+use crate::number::Number;
+
 #[derive(Clone, Debug)]
 pub struct DataSet {
     pub x: f64,
@@ -10,13 +12,13 @@ trait SetLength {
 
 impl SetLength for Vec<DataSet> {
     fn set_len(&self) -> f64 {
-        self.len() as f64
+        self.len().to_f64()
     }
 }
 
 impl SetLength for [DataSet] {
     fn set_len(&self) -> f64 {
-        self.len() as f64
+        self.len().to_f64()
     }
 }
 
