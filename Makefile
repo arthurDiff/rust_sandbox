@@ -10,3 +10,5 @@ websocket:
 	cargo run -p webbest_socket
 sha:
 	cargo run -p sha1
+b_math:
+	cargo run -p brain_math
