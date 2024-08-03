@@ -27,5 +27,5 @@ fn main() {
 
 fn handle_client(s: TcpStream) {
     let mut ws = Websocket::new(s);
-    ws.connect();
+    ws.connect().unwrap();
 }

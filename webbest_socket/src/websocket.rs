@@ -123,6 +123,7 @@ impl Websocket {
     pub fn send_ping(&self) -> Result<(), WebsocketError> {
         Ok(())
     }
+    #[allow(unused_variables)]
     pub fn send_text(&self, msg: &str) -> Result<(), WebsocketError> {
         todo!();
     }

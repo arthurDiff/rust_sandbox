@@ -1,3 +1,11 @@
 [workspace]
 
-members = [ "blockchain_p","guess_this", "math", "minigrep", "mt_web_serv", "sha1", "webbest_socket"]
+members = [
+    "blockchain_p",
+    "guess_this",
+    "brain_math",
+    "minigrep",
+    "mt_web_serv",
+    "sha1",
+    "webbest_socket",
+]
