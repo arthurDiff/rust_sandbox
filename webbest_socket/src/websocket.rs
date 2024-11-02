@@ -68,6 +68,7 @@ impl Websocket {
         ))
     }
 
+    #[allow(dead_code)]
     pub fn handle_connection(&mut self) -> Result<(), WebsocketError> {
         let mut buffer = [0; 2048];
 
