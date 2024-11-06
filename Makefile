@@ -12,3 +12,5 @@ sha:
 	cargo run -p sha1
 b_math:
 	cargo run -p brain_math
+num_regn:
+	cargo run -p number_regn

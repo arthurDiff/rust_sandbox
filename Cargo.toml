@@ -7,5 +7,5 @@ members = [
     "minigrep",
     "mt_web_serv",
     "sha1",
-    "webbest_socket",
+    "webbest_socket", "number_regn",
 ]
