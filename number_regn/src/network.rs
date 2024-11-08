@@ -1,7 +1,9 @@
+use cvec::CVec;
 use rand_distr::{Distribution, Normal};
-use value::CVec;
 
-pub mod value;
+use crate::math::Math;
+
+pub mod cvec;
 #[derive(Debug)]
 pub struct Network<const LC: usize> {
     pub size: [usize; LC],
@@ -38,7 +40,10 @@ impl<const LC: usize> Network<LC> {
         }
     }
 
-    pub fn feedforward(self, input: CVec) -> CVec {
-        todo!()
+    pub fn feedforward(&self, mut input: CVec) -> CVec {
+        for (weight, bias) in self.weights.iter().zip(self.biases.iter()) {
+            input = Math::sigmoid(&(weight.dot(&input).add(bias)))
+        }
+        input
     }
 }
