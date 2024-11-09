@@ -40,10 +40,10 @@ impl<const LC: usize> Network<LC> {
         }
     }
 
-    pub fn feedforward(&self, mut input: CVec) -> CVec {
-        for (weight, bias) in self.weights.iter().zip(self.biases.iter()) {
-            input = Math::sigmoid(&(weight.dot(&input).add(bias)))
-        }
-        input
+    pub fn feedforward(&self, input: CVec) -> CVec {
+        self.weights
+            .iter()
+            .zip(self.biases.iter())
+            .fold(input, |accu, (w, b)| Math::sigmoid(&(w.dot(&accu).add(b))))
     }
 }
