@@ -19,8 +19,16 @@ impl CVec {
     pub fn dot(&self, rhs: &Self) -> Self {
         std::ops::Mul::mul(self.clone(), rhs.clone())
     }
+
     pub fn add(&self, rhs: &Self) -> Self {
         std::ops::Add::add(self.clone(), rhs.clone())
+    }
+    pub fn sub(&self, rhs: &Self) -> Self {
+        std::ops::Sub::sub(self.clone(), rhs.clone())
+    }
+
+    pub fn zeroes(&self) -> Self {
+        Self(vec![vec![0.; self.0[0].len()]])
     }
 
     fn assert_comparable(lfs: &Self, rhs: &Self) {
@@ -72,6 +80,19 @@ impl std::ops::Mul for CVec {
     }
 }
 
+impl std::ops::Mul<f32> for CVec {
+    type Output = CVec;
+
+    fn mul(mut self, rhs: f32) -> Self::Output {
+        self.0.iter_mut().for_each(|tv| {
+            tv.iter_mut().for_each(|v| {
+                *v *= rhs;
+            })
+        });
+        self
+    }
+}
+
 impl std::ops::Add for CVec {
     type Output = CVec;
 
@@ -90,6 +111,30 @@ impl std::ops::Add for CVec {
         self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
             tv.iter_mut().enumerate().for_each(|(inner_idx, v)| {
                 *v += rhs.0[idx][inner_idx];
+            })
+        });
+        self
+    }
+}
+
+impl std::ops::Sub for CVec {
+    type Output = CVec;
+
+    fn sub(mut self, rhs: Self) -> Self::Output {
+        Self::assert_comparable(&self, &rhs);
+
+        if rhs.0[0].len() == 1 {
+            self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
+                tv.iter_mut().for_each(|v| {
+                    *v -= rhs.0[idx][0];
+                })
+            });
+            return self;
+        }
+
+        self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
+            tv.iter_mut().enumerate().for_each(|(inner_idx, v)| {
+                *v -= rhs.0[idx][inner_idx];
             })
         });
         self
