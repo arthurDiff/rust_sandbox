@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 /// Connection Vector
 #[derive(Debug, Clone)]
 pub struct CVec(pub Vec<Vec<f32>>);
@@ -20,6 +22,10 @@ impl CVec {
         std::ops::Mul::mul(self.clone(), rhs.clone())
     }
 
+    pub fn mul(&self, rhs: f32) -> Self {
+        std::ops::Mul::mul(self.clone(), rhs)
+    }
+
     pub fn add(&self, rhs: &Self) -> Self {
         std::ops::Add::add(self.clone(), rhs.clone())
     }
@@ -29,6 +35,15 @@ impl CVec {
 
     pub fn zeroes(&self) -> Self {
         Self(vec![vec![0.; self.0[0].len()]])
+    }
+
+    pub fn index_of_max(&self) -> usize {
+        self.0
+            .iter()
+            .enumerate()
+            .max_by(|(_, x), (_, y)| x[0].partial_cmp(&y[0]).unwrap_or(Ordering::Equal))
+            .unwrap()
+            .0
     }
 
     fn assert_comparable(lfs: &Self, rhs: &Self) {
@@ -116,6 +131,26 @@ impl std::ops::Add for CVec {
         self
     }
 }
+impl std::ops::AddAssign for CVec {
+    fn add_assign(&mut self, rhs: Self) {
+        Self::assert_comparable(self, &rhs);
+
+        if rhs.0[0].len() == 1 {
+            self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
+                tv.iter_mut().for_each(|v| {
+                    *v += rhs.0[idx][0];
+                })
+            });
+            return;
+        }
+
+        self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
+            tv.iter_mut().enumerate().for_each(|(inner_idx, v)| {
+                *v += rhs.0[idx][inner_idx];
+            })
+        });
+    }
+}
 
 impl std::ops::Sub for CVec {
     type Output = CVec;
@@ -138,5 +173,62 @@ impl std::ops::Sub for CVec {
             })
         });
         self
+    }
+}
+
+impl std::ops::SubAssign for CVec {
+    fn sub_assign(&mut self, rhs: Self) {
+        Self::assert_comparable(self, &rhs);
+
+        if rhs.0[0].len() == 1 {
+            self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
+                tv.iter_mut().for_each(|v| {
+                    *v -= rhs.0[idx][0];
+                })
+            });
+            return;
+        }
+
+        self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
+            tv.iter_mut().enumerate().for_each(|(inner_idx, v)| {
+                *v -= rhs.0[idx][inner_idx];
+            })
+        });
+    }
+}
+
+impl std::ops::Sub<f32> for CVec {
+    type Output = CVec;
+
+    fn sub(mut self, rhs: f32) -> Self::Output {
+        self.0.iter_mut().for_each(|tv| {
+            tv.iter_mut().for_each(|v| {
+                *v -= rhs;
+            })
+        });
+        self
+    }
+}
+
+impl std::ops::SubAssign<f32> for CVec {
+    fn sub_assign(&mut self, rhs: f32) {
+        self.0.iter_mut().for_each(|tv| {
+            tv.iter_mut().for_each(|v| {
+                *v -= rhs;
+            })
+        });
+    }
+}
+
+impl std::ops::Sub<CVec> for f32 {
+    type Output = CVec;
+
+    fn sub(self, mut rhs: CVec) -> Self::Output {
+        rhs.0.iter_mut().for_each(|tv| {
+            tv.iter_mut().for_each(|v| {
+                *v -= self;
+            })
+        });
+        rhs
     }
 }

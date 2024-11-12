@@ -11,4 +11,7 @@ impl Math {
             .collect::<Vec<Vec<f32>>>()
             .into()
     }
+    pub fn sigmoid_prime(input: &CVec) -> CVec {
+        Self::sigmoid(input) * (1. - Self::sigmoid(input))
+    }
 }

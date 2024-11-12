@@ -1,5 +1,3 @@
-use std::collections;
-
 use cvec::CVec;
 use rand::seq::SliceRandom;
 use rand_distr::{Distribution, Normal};
@@ -9,7 +7,7 @@ use crate::math::Math;
 pub mod cvec;
 
 /// Vec<(input, output)>
-type Dataset = Vec<(f32, f32)>;
+type Dataset = Vec<(CVec, f32)>;
 #[derive(Debug)]
 pub struct Network<const LC: usize> {
     pub size: [usize; LC],
@@ -19,6 +17,9 @@ pub struct Network<const LC: usize> {
 
 impl<const LC: usize> Network<LC> {
     pub fn new(size: [usize; LC]) -> Self {
+        if LC < 3 {
+            panic!("Network: Can't create network with layers less then 3");
+        }
         let mut rand = rand::thread_rng();
         let normal = Normal::new(0., 1.).unwrap();
 
@@ -67,7 +68,7 @@ impl<const LC: usize> Network<LC> {
                 self.update_batch(mb, eta);
             });
 
-            if let (Some(_td)) = test_data.as_ref() {
+            if let Some(_td) = test_data.as_ref() {
                 todo!()
             }
             println!("Epoch: {} complete", e)
@@ -76,48 +77,96 @@ impl<const LC: usize> Network<LC> {
 
     /// batch: &[(input, output)]
     /// eta: learning rate
-    fn update_batch(&mut self, batch: &[(f32, f32)], eta: f32) {
+    fn update_batch(&mut self, batch: &[(CVec, f32)], eta: f32) {
         let batch_size = batch.len() as f32;
-        let (mut nabla_w, mut nabla_b) = (
-            self.weights
-                .iter()
-                .map(|w| w.zeroes())
-                .collect::<Vec<CVec>>(),
-            self.biases
-                .iter()
-                .map(|b| b.zeroes())
-                .collect::<Vec<CVec>>(),
-        );
+        let (mut nabla_w, mut nabla_b) = (self.zeroed_weight(), self.zeroed_biases());
+
         batch.iter().for_each(|(input, output)| {
-            let (delta_nabla_w, delta_nabla_b) = self.backprop(*input, *output);
+            let (delta_nabla_w, delta_nabla_b) = self.backprop(input.clone(), *output);
             nabla_w.iter_mut().zip(delta_nabla_w).for_each(|(nw, dnw)| {
-                *nw = nw.add(&dnw);
+                *nw += dnw;
             });
             nabla_b.iter_mut().zip(delta_nabla_b).for_each(|(nb, dnb)| {
-                *nb = nb.add(&dnb);
+                *nb += dnb;
             });
         });
+
         self.weights
             .iter_mut()
             .zip(nabla_w.iter())
-            .for_each(|(w, nw)| *w = w.clone() - nw.clone() * (eta / batch_size));
+            .for_each(|(w, nw)| *w -= nw.mul(eta / batch_size));
 
         self.biases
             .iter_mut()
             .zip(nabla_b.iter())
-            .for_each(|(b, nb)| *b = b.clone() - nb.clone() * (eta / batch_size))
+            .for_each(|(b, nb)| *b -= nb.mul(eta / batch_size))
     }
 
     /// Back Propagation
-    /// returns: (nabla_biases, nabla_weights)
-    fn backprop(&self, input: f32, output: f32) -> (Vec<CVec>, Vec<CVec>) {
-        todo!()
+    /// returns: (nabla_biases, nabla_weights) - The gradient for the cost function C_x
+    fn backprop(&self, mut input: CVec, output: f32) -> (Vec<CVec>, Vec<CVec>) {
+        let (mut nabla_w, mut nabla_b) = (self.zeroed_weight(), self.zeroed_biases());
+        // (activation, activations, zvectors)
+        let (act_vec, z_vec) = self.weights.iter().zip(self.biases.iter()).fold(
+            (vec![input.clone()], vec![]),
+            |mut accu, (w, b)| {
+                let z = w.dot(&input).add(b);
+                // activation
+                input = Math::sigmoid(&z);
+                // activations
+                accu.0.push(input.clone());
+                // z vec
+                accu.1.push(z);
+
+                accu
+            },
+        );
+
+        let mut delta = Self::cost_derivative(&act_vec[LC - 1], output)
+            * Math::sigmoid_prime(z_vec.last().unwrap());
+        *nabla_b.last_mut().unwrap() = delta.clone();
+        *nabla_w.last_mut().unwrap() = delta.clone() * act_vec[act_vec.len() - 2].clone();
+
+        (2..LC).for_each(|l| {
+            let sp = Math::sigmoid_prime(&z_vec[z_vec.len() - l]);
+            delta = self.weights[LC - l].dot(&delta) * sp;
+            nabla_b[LC - l - 1] = delta.clone();
+            nabla_w[LC - l - 1] = delta.dot(&act_vec[LC - l]);
+        });
+
+        (nabla_w, nabla_b)
     }
 
-    pub fn feedforward(&self, input: CVec) -> CVec {
+    // test_data: &[(input, output)]
+    pub fn evaluate(&self, test_data: &[(CVec, f32)]) -> usize {
+        let mut correct_answer_c = 0;
+        test_data.iter().for_each(|(x, y)| {
+            if self.feedforward(x).index_of_max() != *y as usize {
+                return;
+            }
+            correct_answer_c += 1;
+        });
+        correct_answer_c
+    }
+
+    pub fn feedforward(&self, input: &CVec) -> CVec {
         self.weights
             .iter()
             .zip(self.biases.iter())
-            .fold(input, |accu, (w, b)| Math::sigmoid(&(w.dot(&accu).add(b))))
+            .fold(input.clone(), |accu, (w, b)| {
+                Math::sigmoid(&(w.dot(&accu).add(b)))
+            })
+    }
+
+    fn zeroed_weight(&self) -> Vec<CVec> {
+        self.weights.iter().map(|w| w.zeroes()).collect()
+    }
+
+    fn zeroed_biases(&self) -> Vec<CVec> {
+        self.biases.iter().map(|w| w.zeroes()).collect()
+    }
+
+    fn cost_derivative(output_activations: &CVec, output: f32) -> CVec {
+        output_activations.clone() - output
     }
 }
