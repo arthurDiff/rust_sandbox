@@ -1,14 +1,16 @@
 use std::cmp::Ordering;
 
 /// Connection Vector
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CVec(pub Vec<Vec<f32>>);
 
 impl CVec {
     pub fn new((len, val_count): (usize, usize)) -> Self {
         Self(vec![vec![0.; val_count]; len])
     }
-
+    pub fn dim(&self) -> (usize, usize) {
+        (self.0.len(), self.0[0].len())
+    }
     pub fn fill_with<F>(&mut self, mut f: F)
     where
         F: FnMut() -> f32,
@@ -46,20 +48,36 @@ impl CVec {
             .0
     }
 
-    fn assert_comparable(lfs: &Self, rhs: &Self) {
-        let (lhs_len, rhs_len) = (lfs.0.len(), rhs.0.len());
-        if lhs_len == 0 || rhs_len == 0 {
+    fn assert_dot_comparable(lhs: &Self, rhs: &Self) {
+        let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (lhs.dim(), rhs.dim());
+        if lhs_x == 0 || rhs_x == 0 {
             panic!(
                 "Cannot multiply lfs CVec of len: {:?} with rhs CVec of len: {:?}",
-                lhs_len, rhs_len
+                lhs_x, rhs_y
             )
         }
-        let (lhs_c_len, rhs_c_len) = (lfs.0[0].len(), rhs.0[0].len());
-        if lhs_len != rhs_len || rhs_c_len == 1 || lhs_c_len != rhs_c_len {
+        if !(lhs_x == rhs_x && (lhs_y == rhs_y || rhs_y == 1) || lhs_y == rhs_x) {
             panic!(
                 "Cannot multiply lfs CVec of dim: {:?} with rhs CVec of dim: {:?}",
-                (lhs_len, lhs_c_len),
-                (rhs_len, rhs_c_len)
+                (lhs_x, lhs_y),
+                (rhs_x, rhs_y)
+            )
+        }
+    }
+
+    fn assert_add_sub_comparable(lhs: &Self, rhs: &Self) {
+        let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (lhs.dim(), rhs.dim());
+        if lhs_x == 0 || rhs_x == 0 {
+            panic!(
+                "Cannot add or subtract lfs CVec of len: {:?} with rhs CVec of len: {:?}",
+                lhs_x, rhs_y
+            )
+        }
+        if !(lhs_x == rhs_x && (lhs_y == rhs_y || rhs_y == 1) || lhs_y == rhs_x && rhs_y == 1) {
+            panic!(
+                "Cannot add or subtract lfs CVec of dim: {:?} with rhs CVec of dim: {:?}",
+                (lhs_x, lhs_y),
+                (rhs_x, rhs_y)
             )
         }
     }
@@ -75,14 +93,36 @@ impl std::ops::Mul for CVec {
     type Output = CVec;
 
     fn mul(mut self, rhs: Self) -> Self::Output {
-        Self::assert_comparable(&self, &rhs);
+        Self::assert_dot_comparable(&self, &rhs);
+        let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (self.dim(), rhs.dim());
 
-        if rhs.0[0].len() == 1 {
+        if lhs_x == rhs_x && rhs_y == 1 {
             self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
                 tv.iter_mut().for_each(|v| {
                     *v *= rhs.0[idx][0];
                 })
             });
+            return self;
+        }
+
+        if lhs_y == rhs_x {
+            if rhs_y == 1 {
+                self.0.iter_mut().for_each(|tv| {
+                    tv.iter_mut().enumerate().for_each(|(idx, v)| {
+                        *v *= rhs.0[idx][0];
+                    })
+                });
+            } else {
+                self.0.iter_mut().for_each(|tv| {
+                    *tv = (0..lhs_y)
+                        .map(|idx| {
+                            tv.iter()
+                                .enumerate()
+                                .fold(0., |accu, (inner_idx, v)| accu + v * rhs.0[inner_idx][idx])
+                        })
+                        .collect();
+                })
+            }
             return self;
         }
 
@@ -112,11 +152,22 @@ impl std::ops::Add for CVec {
     type Output = CVec;
 
     fn add(mut self, rhs: Self) -> Self::Output {
-        Self::assert_comparable(&self, &rhs);
+        Self::assert_add_sub_comparable(&self, &rhs);
 
-        if rhs.0[0].len() == 1 {
+        let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (self.dim(), rhs.dim());
+
+        if lhs_x == rhs_x && rhs_y == 1 {
             self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
                 tv.iter_mut().for_each(|v| {
+                    *v += rhs.0[idx][0];
+                })
+            });
+            return self;
+        }
+
+        if lhs_y == rhs_x && rhs_y == 1 {
+            self.0.iter_mut().for_each(|tv| {
+                tv.iter_mut().enumerate().for_each(|(idx, v)| {
                     *v += rhs.0[idx][0];
                 })
             });
@@ -133,11 +184,22 @@ impl std::ops::Add for CVec {
 }
 impl std::ops::AddAssign for CVec {
     fn add_assign(&mut self, rhs: Self) {
-        Self::assert_comparable(self, &rhs);
+        Self::assert_add_sub_comparable(self, &rhs);
 
-        if rhs.0[0].len() == 1 {
+        let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (self.dim(), rhs.dim());
+
+        if lhs_x == rhs_x && rhs_y == 1 {
             self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
                 tv.iter_mut().for_each(|v| {
+                    *v += rhs.0[idx][0];
+                })
+            });
+            return;
+        }
+
+        if lhs_y == rhs_x && rhs_y == 1 {
+            self.0.iter_mut().for_each(|tv| {
+                tv.iter_mut().enumerate().for_each(|(idx, v)| {
                     *v += rhs.0[idx][0];
                 })
             });
@@ -156,11 +218,22 @@ impl std::ops::Sub for CVec {
     type Output = CVec;
 
     fn sub(mut self, rhs: Self) -> Self::Output {
-        Self::assert_comparable(&self, &rhs);
+        Self::assert_add_sub_comparable(&self, &rhs);
 
-        if rhs.0[0].len() == 1 {
+        let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (self.dim(), rhs.dim());
+
+        if lhs_x == rhs_x && rhs_y == 1 {
             self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
                 tv.iter_mut().for_each(|v| {
+                    *v -= rhs.0[idx][0];
+                })
+            });
+            return self;
+        }
+
+        if lhs_y == rhs_x && rhs_y == 1 {
+            self.0.iter_mut().for_each(|tv| {
+                tv.iter_mut().enumerate().for_each(|(idx, v)| {
                     *v -= rhs.0[idx][0];
                 })
             });
@@ -178,11 +251,22 @@ impl std::ops::Sub for CVec {
 
 impl std::ops::SubAssign for CVec {
     fn sub_assign(&mut self, rhs: Self) {
-        Self::assert_comparable(self, &rhs);
+        Self::assert_add_sub_comparable(self, &rhs);
 
-        if rhs.0[0].len() == 1 {
+        let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (self.dim(), rhs.dim());
+
+        if lhs_x == rhs_x && rhs_y == 1 {
             self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
                 tv.iter_mut().for_each(|v| {
+                    *v -= rhs.0[idx][0];
+                })
+            });
+            return;
+        }
+
+        if lhs_y == rhs_x && rhs_y == 1 {
+            self.0.iter_mut().for_each(|tv| {
+                tv.iter_mut().enumerate().for_each(|(idx, v)| {
                     *v -= rhs.0[idx][0];
                 })
             });

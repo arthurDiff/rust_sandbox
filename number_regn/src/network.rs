@@ -1,3 +1,5 @@
+use std::{io::Write, path::PathBuf};
+
 use cvec::CVec;
 use rand::seq::SliceRandom;
 use rand_distr::{Distribution, Normal};
@@ -6,23 +8,26 @@ use crate::{data_set::Dataset, math::Math};
 
 pub mod cvec;
 
-#[derive(Debug)]
-pub struct Network<const LC: usize> {
-    pub size: [usize; LC],
+// This is def crud implementation
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct Network {
+    pub layer_count: usize,
+    pub size: Vec<usize>,
     pub biases: Vec<CVec>,
     pub weights: Vec<CVec>,
 }
 
-impl<const LC: usize> Network<LC> {
-    pub fn new(size: [usize; LC]) -> Self {
-        if LC < 3 {
+impl Network {
+    pub fn new(size: &[usize]) -> Self {
+        if size.len() < 3 {
             panic!("Network: Can't create network with layers less then 3");
         }
         let mut rand = rand::thread_rng();
         let normal = Normal::new(0., 1.).unwrap();
 
         Self {
-            size,
+            layer_count: size.len(),
+            size: size.to_vec(),
             biases: size[1..]
                 .to_vec()
                 .iter()
@@ -120,16 +125,16 @@ impl<const LC: usize> Network<LC> {
             },
         );
 
-        let mut delta = Self::cost_derivative(&act_vec[LC - 1], output)
+        let mut delta = Self::cost_derivative(&act_vec[self.layer_count - 1], output)
             * Math::sigmoid_prime(z_vec.last().unwrap());
         *nabla_b.last_mut().unwrap() = delta.clone();
         *nabla_w.last_mut().unwrap() = delta.clone() * act_vec[act_vec.len() - 2].clone();
 
-        (2..LC).for_each(|l| {
+        (2..self.layer_count).for_each(|l| {
             let sp = Math::sigmoid_prime(&z_vec[z_vec.len() - l]);
-            delta = self.weights[LC - l].dot(&delta) * sp;
-            nabla_b[LC - l - 1] = delta.clone();
-            nabla_w[LC - l - 1] = delta.dot(&act_vec[LC - l]);
+            delta = self.weights[self.layer_count - l].dot(&delta) * sp;
+            nabla_b[self.layer_count - l - 1] = delta.clone();
+            nabla_w[self.layer_count - l - 1] = delta.dot(&act_vec[self.layer_count - l]);
         });
 
         (nabla_w, nabla_b)
@@ -166,5 +171,20 @@ impl<const LC: usize> Network<LC> {
 
     fn cost_derivative(output_activations: &CVec, output: f32) -> CVec {
         output_activations.clone() - output
+    }
+
+    pub fn load_from_json(path: PathBuf) -> Self {
+        let nw_str = std::fs::read_to_string(path.clone()).unwrap_or_else(|err| {
+            panic!(
+                "Failed to network config from path:{:?} with error: {:?}",
+                path, err
+            );
+        });
+        serde_json::from_str(&nw_str).unwrap()
+    }
+
+    pub fn save_as_json(&self, save_dir: PathBuf) -> Result<(), std::io::Error> {
+        std::fs::File::create(save_dir.join("network_config.json"))?
+            .write_all(serde_json::to_string(self).unwrap().as_bytes())
     }
 }
