@@ -2,12 +2,10 @@ use cvec::CVec;
 use rand::seq::SliceRandom;
 use rand_distr::{Distribution, Normal};
 
-use crate::math::Math;
+use crate::{data_set::Dataset, math::Math};
 
 pub mod cvec;
 
-/// Vec<(input, output)>
-type Dataset = Vec<(CVec, f32)>;
 #[derive(Debug)]
 pub struct Network<const LC: usize> {
     pub size: [usize; LC],
