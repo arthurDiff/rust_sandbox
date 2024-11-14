@@ -71,8 +71,9 @@ impl Network {
                 self.update_batch(mb, eta);
             });
 
-            if let Some(_td) = test_data.as_ref() {
-                todo!()
+            if let Some(td) = test_data.as_ref() {
+                println!("Epoch {}: {} / {}", e, self.evaluate(td), td.len());
+                continue;
             }
             println!("Epoch: {} complete", e)
         }

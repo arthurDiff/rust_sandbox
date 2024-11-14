@@ -52,13 +52,13 @@ impl CVec {
         let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (lhs.dim(), rhs.dim());
         if lhs_x == 0 || rhs_x == 0 {
             panic!(
-                "Cannot multiply lfs CVec of len: {:?} with rhs CVec of len: {:?}",
+                "AssertMul: cannot multiply lfs CVec of len: {:?} with rhs CVec of len: {:?}",
                 lhs_x, rhs_y
             )
         }
         if !(lhs_x == rhs_x && (lhs_y == rhs_y || rhs_y == 1) || lhs_y == rhs_x) {
             panic!(
-                "Cannot multiply lfs CVec of dim: {:?} with rhs CVec of dim: {:?}",
+                "AssertMul: cannot multiply lfs CVec of dim: {:?} with rhs CVec of dim: {:?}",
                 (lhs_x, lhs_y),
                 (rhs_x, rhs_y)
             )
@@ -69,13 +69,13 @@ impl CVec {
         let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (lhs.dim(), rhs.dim());
         if lhs_x == 0 || rhs_x == 0 {
             panic!(
-                "Cannot add or subtract lfs CVec of len: {:?} with rhs CVec of len: {:?}",
+                "AssertAddSub: cannot add or subtract lfs CVec of len: {:?} with rhs CVec of len: {:?}",
                 lhs_x, rhs_y
             )
         }
         if !(lhs_x == rhs_x && (lhs_y == rhs_y || rhs_y == 1) || lhs_y == rhs_x && rhs_y == 1) {
             panic!(
-                "Cannot add or subtract lfs CVec of dim: {:?} with rhs CVec of dim: {:?}",
+                "AssertAddSub: cannot add or subtract lfs CVec of dim: {:?} with rhs CVec of dim: {:?}",
                 (lhs_x, lhs_y),
                 (rhs_x, rhs_y)
             )
