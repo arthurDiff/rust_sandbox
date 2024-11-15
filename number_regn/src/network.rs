@@ -1,6 +1,6 @@
 use std::{io::Write, path::PathBuf};
 
-use cvec::CVec;
+use cvec::{CVec, CVecNetwork};
 use rand::seq::SliceRandom;
 use rand_distr::{Distribution, Normal};
 
@@ -84,9 +84,14 @@ impl Network {
     fn update_batch(&mut self, batch: &[(CVec, f32)], eta: f32) {
         let batch_size = batch.len() as f32;
         let (mut nabla_w, mut nabla_b) = (self.zeroed_weight(), self.zeroed_biases());
-
+        println!("{:?}=norm\n", (nabla_w[0].dim(), nabla_b[0].dim()));
+        println!("{:?}", (nabla_w.dim(), nabla_b.dim()));
         batch.iter().for_each(|(input, output)| {
             let (delta_nabla_w, delta_nabla_b) = self.backprop(input.clone(), *output);
+            println!(
+                "{:?}=nodela\n",
+                (delta_nabla_w[0].dim(), delta_nabla_b[0].dim())
+            );
             nabla_w.iter_mut().zip(delta_nabla_w).for_each(|(nw, dnw)| {
                 *nw += dnw;
             });

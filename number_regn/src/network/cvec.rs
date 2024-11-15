@@ -36,7 +36,7 @@ impl CVec {
     }
 
     pub fn zeroes(&self) -> Self {
-        Self(vec![vec![0.; self.0[0].len()]])
+        Self(vec![vec![0.; self.0[0].len()]; self.0.len()])
     }
 
     pub fn index_of_max(&self) -> usize {
@@ -314,5 +314,17 @@ impl std::ops::Sub<CVec> for f32 {
             })
         });
         rhs
+    }
+}
+
+pub trait CVecNetwork {
+    fn dim(&self) -> Vec<(usize, usize)>;
+}
+
+impl CVecNetwork for Vec<CVec> {
+    fn dim(&self) -> Vec<(usize, usize)> {
+        self.iter()
+            .map(|w| w.dim())
+            .collect::<Vec<(usize, usize)>>()
     }
 }
