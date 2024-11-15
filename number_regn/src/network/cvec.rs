@@ -317,11 +317,11 @@ impl std::ops::Sub<CVec> for f32 {
     }
 }
 
-pub trait CVecNetwork {
+pub trait NetworkCVec {
     fn dim(&self) -> Vec<(usize, usize)>;
 }
 
-impl CVecNetwork for Vec<CVec> {
+impl NetworkCVec for Vec<CVec> {
     fn dim(&self) -> Vec<(usize, usize)> {
         self.iter()
             .map(|w| w.dim())
