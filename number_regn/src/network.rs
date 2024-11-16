@@ -4,7 +4,10 @@ use cvec::{CVec, NetworkCVec};
 use rand::seq::SliceRandom;
 use rand_distr::{Distribution, Normal};
 
-use crate::{data_set::Dataset, math::Math};
+use crate::{
+    data_set::{Dataset, TestDataSet},
+    math::Math,
+};
 
 pub mod cvec;
 
@@ -62,7 +65,7 @@ impl Network {
         epoch: usize,
         mini_batch_size: usize,
         eta: f32,
-        test_data: Option<Dataset>,
+        test_data: Option<TestDataSet>,
     ) {
         let mut rand = rand::thread_rng();
         for e in 0..epoch {
@@ -81,12 +84,11 @@ impl Network {
 
     /// batch: &[(input, output)]
     /// eta: learning rate
-    fn update_batch(&mut self, batch: &[(CVec, f32)], eta: f32) {
+    fn update_batch(&mut self, batch: &[(CVec, CVec)], eta: f32) {
         let batch_size = batch.len() as f32;
         let (mut nabla_w, mut nabla_b) = (self.zeroed_weight(), self.zeroed_biases());
         batch.iter().for_each(|(input, output)| {
-            let (delta_nabla_w, delta_nabla_b) = self.backprop(input.clone(), *output);
-            println!("{:?}", (delta_nabla_w.dim(), delta_nabla_b.dim()));
+            let (delta_nabla_w, delta_nabla_b) = self.backprop(input.clone(), output.clone());
             nabla_w.iter_mut().zip(delta_nabla_w).for_each(|(nw, dnw)| {
                 *nw += dnw;
             });
@@ -108,7 +110,7 @@ impl Network {
 
     /// Back Propagation
     /// returns: (nabla_biases, nabla_weights) - The gradient for the cost function C_x
-    fn backprop(&self, mut input: CVec, output: f32) -> (Vec<CVec>, Vec<CVec>) {
+    fn backprop(&self, mut input: CVec, output: CVec) -> (Vec<CVec>, Vec<CVec>) {
         let (mut nabla_w, mut nabla_b) = (self.zeroed_weight(), self.zeroed_biases());
         // (activation, activations, zvectors)
         let (act_vec, z_vec) = self.weights.iter().zip(self.biases.iter()).fold(
@@ -126,16 +128,18 @@ impl Network {
             },
         );
 
-        let mut delta = Self::cost_derivative(&act_vec[self.layer_count - 1], output)
+        let mut delta = Self::cost_derivative(&act_vec[self.layer_count - 1], &output)
             * Math::sigmoid_prime(z_vec.last().unwrap());
+
         *nabla_b.last_mut().unwrap() = delta.clone();
-        *nabla_w.last_mut().unwrap() = delta.clone() * act_vec[act_vec.len() - 2].clone();
+        *nabla_w.last_mut().unwrap() = delta.clone() * act_vec[act_vec.len() - 2].transpose();
 
         (2..self.layer_count).for_each(|l| {
             let sp = Math::sigmoid_prime(&z_vec[z_vec.len() - l]);
-            delta = self.weights[self.layer_count - l].dot(&delta) * sp;
+            delta = self.weights[self.layer_count - l].transpose().dot(&delta) * sp;
             nabla_b[self.layer_count - l - 1] = delta.clone();
-            nabla_w[self.layer_count - l - 1] = delta.dot(&act_vec[self.layer_count - l]);
+            nabla_w[self.layer_count - l - 1] =
+                delta.dot(&act_vec[self.layer_count - l].transpose());
         });
 
         (nabla_w, nabla_b)
@@ -170,8 +174,8 @@ impl Network {
         self.biases.iter().map(|w| w.zeroes()).collect()
     }
 
-    fn cost_derivative(output_activations: &CVec, output: f32) -> CVec {
-        output_activations.clone() - output
+    fn cost_derivative(output_activations: &CVec, output: &CVec) -> CVec {
+        output_activations.clone() - output.clone()
     }
 
     pub fn load_from_json(path: PathBuf) -> Self {

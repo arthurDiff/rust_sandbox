@@ -8,9 +8,11 @@ impl CVec {
     pub fn new((len, val_count): (usize, usize)) -> Self {
         Self(vec![vec![0.; val_count]; len])
     }
+
     pub fn dim(&self) -> (usize, usize) {
         (self.0.len(), self.0[0].len())
     }
+
     pub fn fill_with<F>(&mut self, mut f: F)
     where
         F: FnMut() -> f32,
@@ -18,6 +20,18 @@ impl CVec {
         for r in self.0.iter_mut() {
             r.fill_with(&mut f);
         }
+    }
+
+    pub fn transpose(&self) -> Self {
+        let (x, y) = self.dim();
+        let mut t_vec = Self::new((y, x));
+        t_vec.0.iter_mut().enumerate().for_each(|(r_idx, r_vec)| {
+            r_vec
+                .iter_mut()
+                .enumerate()
+                .for_each(|(c_idx, v)| *v = self.0[c_idx][r_idx]);
+        });
+        t_vec
     }
 
     pub fn dot(&self, rhs: &Self) -> Self {
@@ -116,10 +130,12 @@ impl std::ops::Mul for CVec {
 
         // lhs_y == rhs_x
         if rhs_y == 1 {
-            self.0
-                .iter_mut()
-                .enumerate()
-                .for_each(|(idx, tv)| *tv = vec![tv.iter().sum::<f32>() * rhs.0[idx][0]]);
+            self.0.iter_mut().for_each(|tv| {
+                *tv = vec![tv
+                    .iter()
+                    .zip(rhs.0.iter())
+                    .fold(0., |accu, (x, y)| accu + x + y[0])]
+            });
             return self;
         }
 
@@ -165,7 +181,6 @@ impl std::ops::AddAssign for CVec {
 
         let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (self.dim(), rhs.dim());
 
-        println!("{:?} == add assign", ((lhs_x, lhs_y), (rhs_x, rhs_y)));
         if lhs_x == rhs_x && lhs_y == rhs_y {
             self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
                 tv.iter_mut().enumerate().for_each(|(inner_idx, v)| {
@@ -227,7 +242,7 @@ impl std::ops::SubAssign for CVec {
             return;
         }
 
-        //lhs_y == rhs_x
+        //lhs_y == rhs_x && rhx == 1
         self.0.iter_mut().for_each(|tv| {
             tv.iter_mut().enumerate().for_each(|(idx, v)| {
                 *v -= rhs.0[idx][0];
