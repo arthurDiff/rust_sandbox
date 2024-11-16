@@ -48,7 +48,7 @@ impl CVec {
             .0
     }
 
-    fn assert_dot_comparable(lhs: &Self, rhs: &Self) {
+    fn assert_mul_comparable(lhs: &Self, rhs: &Self) {
         let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (lhs.dim(), rhs.dim());
         if lhs_x == 0 || rhs_x == 0 {
             panic!(
@@ -93,8 +93,17 @@ impl std::ops::Mul for CVec {
     type Output = CVec;
 
     fn mul(mut self, rhs: Self) -> Self::Output {
-        Self::assert_dot_comparable(&self, &rhs);
+        Self::assert_mul_comparable(&self, &rhs);
         let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (self.dim(), rhs.dim());
+
+        if lhs_x == rhs_x && lhs_y == rhs_y {
+            self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
+                tv.iter_mut().enumerate().for_each(|(inner_idx, v)| {
+                    *v *= rhs.0[idx][inner_idx];
+                })
+            });
+            return self;
+        }
 
         if lhs_x == rhs_x && rhs_y == 1 {
             self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
@@ -105,31 +114,23 @@ impl std::ops::Mul for CVec {
             return self;
         }
 
-        if lhs_y == rhs_x {
-            if rhs_y == 1 {
-                self.0.iter_mut().for_each(|tv| {
-                    tv.iter_mut().enumerate().for_each(|(idx, v)| {
-                        *v *= rhs.0[idx][0];
-                    })
-                });
-            } else {
-                self.0.iter_mut().for_each(|tv| {
-                    *tv = (0..lhs_y)
-                        .map(|idx| {
-                            tv.iter()
-                                .enumerate()
-                                .fold(0., |accu, (inner_idx, v)| accu + v * rhs.0[inner_idx][idx])
-                        })
-                        .collect();
-                })
-            }
+        // lhs_y == rhs_x
+        if rhs_y == 1 {
+            self.0
+                .iter_mut()
+                .enumerate()
+                .for_each(|(idx, tv)| *tv = vec![tv.iter().sum::<f32>() * rhs.0[idx][0]]);
             return self;
         }
 
-        self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
-            tv.iter_mut().enumerate().for_each(|(inner_idx, v)| {
-                *v *= rhs.0[idx][inner_idx];
-            })
+        self.0.iter_mut().for_each(|tv| {
+            *tv = (0..lhs_y)
+                .map(|idx| {
+                    tv.iter()
+                        .enumerate()
+                        .fold(0., |accu, (inner_idx, v)| accu + v * rhs.0[inner_idx][idx])
+                })
+                .collect();
         });
         self
     }
@@ -153,41 +154,27 @@ impl std::ops::Add for CVec {
 
     fn add(mut self, rhs: Self) -> Self::Output {
         Self::assert_add_sub_comparable(&self, &rhs);
-
-        let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (self.dim(), rhs.dim());
-
-        if lhs_x == rhs_x && rhs_y == 1 {
-            self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
-                tv.iter_mut().for_each(|v| {
-                    *v += rhs.0[idx][0];
-                })
-            });
-            return self;
-        }
-
-        if lhs_y == rhs_x && rhs_y == 1 {
-            self.0.iter_mut().for_each(|tv| {
-                tv.iter_mut().enumerate().for_each(|(idx, v)| {
-                    *v += rhs.0[idx][0];
-                })
-            });
-            return self;
-        }
-
-        self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
-            tv.iter_mut().enumerate().for_each(|(inner_idx, v)| {
-                *v += rhs.0[idx][inner_idx];
-            })
-        });
+        std::ops::AddAssign::add_assign(&mut self, rhs);
         self
     }
 }
+
 impl std::ops::AddAssign for CVec {
     fn add_assign(&mut self, rhs: Self) {
         Self::assert_add_sub_comparable(self, &rhs);
 
         let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (self.dim(), rhs.dim());
 
+        println!("{:?} == add assign", ((lhs_x, lhs_y), (rhs_x, rhs_y)));
+        if lhs_x == rhs_x && lhs_y == rhs_y {
+            self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
+                tv.iter_mut().enumerate().for_each(|(inner_idx, v)| {
+                    *v += rhs.0[idx][inner_idx];
+                })
+            });
+            return;
+        }
+
         if lhs_x == rhs_x && rhs_y == 1 {
             self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
                 tv.iter_mut().for_each(|v| {
@@ -197,18 +184,10 @@ impl std::ops::AddAssign for CVec {
             return;
         }
 
-        if lhs_y == rhs_x && rhs_y == 1 {
-            self.0.iter_mut().for_each(|tv| {
-                tv.iter_mut().enumerate().for_each(|(idx, v)| {
-                    *v += rhs.0[idx][0];
-                })
-            });
-            return;
-        }
-
-        self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
-            tv.iter_mut().enumerate().for_each(|(inner_idx, v)| {
-                *v += rhs.0[idx][inner_idx];
+        //lhs_y == rhs_x
+        self.0.iter_mut().for_each(|tv| {
+            tv.iter_mut().enumerate().for_each(|(idx, v)| {
+                *v += rhs.0[idx][0];
             })
         });
     }
@@ -219,32 +198,7 @@ impl std::ops::Sub for CVec {
 
     fn sub(mut self, rhs: Self) -> Self::Output {
         Self::assert_add_sub_comparable(&self, &rhs);
-
-        let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (self.dim(), rhs.dim());
-
-        if lhs_x == rhs_x && rhs_y == 1 {
-            self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
-                tv.iter_mut().for_each(|v| {
-                    *v -= rhs.0[idx][0];
-                })
-            });
-            return self;
-        }
-
-        if lhs_y == rhs_x && rhs_y == 1 {
-            self.0.iter_mut().for_each(|tv| {
-                tv.iter_mut().enumerate().for_each(|(idx, v)| {
-                    *v -= rhs.0[idx][0];
-                })
-            });
-            return self;
-        }
-
-        self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
-            tv.iter_mut().enumerate().for_each(|(inner_idx, v)| {
-                *v -= rhs.0[idx][inner_idx];
-            })
-        });
+        std::ops::SubAssign::sub_assign(&mut self, rhs);
         self
     }
 }
@@ -255,6 +209,15 @@ impl std::ops::SubAssign for CVec {
 
         let ((lhs_x, lhs_y), (rhs_x, rhs_y)) = (self.dim(), rhs.dim());
 
+        if lhs_x == rhs_x && lhs_y == rhs_y {
+            self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
+                tv.iter_mut().enumerate().for_each(|(inner_idx, v)| {
+                    *v -= rhs.0[idx][inner_idx];
+                })
+            });
+            return;
+        }
+
         if lhs_x == rhs_x && rhs_y == 1 {
             self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
                 tv.iter_mut().for_each(|v| {
@@ -264,18 +227,10 @@ impl std::ops::SubAssign for CVec {
             return;
         }
 
-        if lhs_y == rhs_x && rhs_y == 1 {
-            self.0.iter_mut().for_each(|tv| {
-                tv.iter_mut().enumerate().for_each(|(idx, v)| {
-                    *v -= rhs.0[idx][0];
-                })
-            });
-            return;
-        }
-
-        self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
-            tv.iter_mut().enumerate().for_each(|(inner_idx, v)| {
-                *v -= rhs.0[idx][inner_idx];
+        //lhs_y == rhs_x
+        self.0.iter_mut().for_each(|tv| {
+            tv.iter_mut().enumerate().for_each(|(idx, v)| {
+                *v -= rhs.0[idx][0];
             })
         });
     }
