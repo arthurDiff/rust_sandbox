@@ -87,7 +87,7 @@ impl CVec {
                 lhs_x, rhs_y
             )
         }
-        if !(lhs_x == rhs_x && (lhs_y == rhs_y || rhs_y == 1) || lhs_y == rhs_x && rhs_y == 1) {
+        if !(lhs_x == rhs_x && (lhs_y == rhs_y || rhs_y == 1)) {
             panic!(
                 "AssertAddSub: cannot add or subtract lfs CVec of dim: {:?} with rhs CVec of dim: {:?}",
                 (lhs_x, lhs_y),
@@ -190,18 +190,8 @@ impl std::ops::AddAssign for CVec {
             return;
         }
 
-        if lhs_x == rhs_x && rhs_y == 1 {
-            self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
-                tv.iter_mut().for_each(|v| {
-                    *v += rhs.0[idx][0];
-                })
-            });
-            return;
-        }
-
-        //lhs_y == rhs_x
-        self.0.iter_mut().for_each(|tv| {
-            tv.iter_mut().enumerate().for_each(|(idx, v)| {
+        self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
+            tv.iter_mut().for_each(|v| {
                 *v += rhs.0[idx][0];
             })
         });
@@ -233,18 +223,8 @@ impl std::ops::SubAssign for CVec {
             return;
         }
 
-        if lhs_x == rhs_x && rhs_y == 1 {
-            self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
-                tv.iter_mut().for_each(|v| {
-                    *v -= rhs.0[idx][0];
-                })
-            });
-            return;
-        }
-
-        //lhs_y == rhs_x && rhx == 1
-        self.0.iter_mut().for_each(|tv| {
-            tv.iter_mut().enumerate().for_each(|(idx, v)| {
+        self.0.iter_mut().enumerate().for_each(|(idx, tv)| {
+            tv.iter_mut().for_each(|v| {
                 *v -= rhs.0[idx][0];
             })
         });

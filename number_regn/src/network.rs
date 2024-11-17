@@ -1,6 +1,6 @@
 use std::{io::Write, path::PathBuf};
 
-use cvec::{CVec, NetworkCVec};
+use cvec::CVec;
 use rand::seq::SliceRandom;
 use rand_distr::{Distribution, Normal};
 
