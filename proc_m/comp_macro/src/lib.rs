@@ -13,6 +13,63 @@ use syn::{
     parse_macro_input, Expr, Pat, Token,
 };
 
+struct Comprehensions {
+    mapping: Mapping,
+    for_if_clauses: ForIfClause,
+    additional_for_ifs: Vec<ForIfClause>,
+}
+
+impl Parse for Comprehensions {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        Ok(Self {
+            mapping: input.parse()?,
+            for_if_clauses: input.parse()?,
+            additional_for_ifs: parse_zero_or_more(input),
+        })
+    }
+}
+
+impl ToTokens for Comprehensions {
+    fn to_tokens(&self, tokens: &mut TokenStream2) {
+        let mut inv_for_ifs = std::iter::once(&self.for_if_clauses)
+            .chain(&self.additional_for_ifs)
+            .rev();
+
+        let init_output = {
+            let Mapping(mapping) = &self.mapping;
+            let inner_clause = inv_for_ifs
+                .next()
+                .expect("At lease one ForIfClause should be present");
+
+            let ForIfClause {
+                pattern,
+                sequence,
+                conditions,
+            } = inner_clause;
+
+            quote! {
+                core::iter::IntoIterator::into_iter(#sequence).flat_map(|#pattern|{
+                    (true #(&& (#conditions))*).then(|| #mapping)
+                })
+            }
+        };
+
+        tokens.extend(inv_for_ifs.fold(init_output, |curr_output, next_fic| {
+            let ForIfClause {
+                pattern,
+                sequence,
+                conditions,
+            } = next_fic;
+
+            quote! {
+                core::iter::IntoIterator::into_iter(#sequence).filter_map(|#pattern|{
+                    (true #(&& (#conditions))*).then(|| #curr_output)
+                }).flatten()
+            }
+        }))
+    }
+}
+
 struct Comprehension {
     mapping: Mapping,
     for_if_clause: ForIfClause,
@@ -112,6 +169,14 @@ impl ToTokens for Condition {
 pub fn comp(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     // parse input
     let c = parse_macro_input!(input as Comprehension);
+    // render output
+    quote! { #c }.into()
+}
+
+#[proc_macro]
+pub fn comps(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    // parse input
+    let c = parse_macro_input!(input as Comprehensions);
     // render output
     quote! { #c }.into()
 }

@@ -1,5 +1,11 @@
-[workspace]
+[provile.dev]
+opt-level = 1
 
+[profile.dev.package."*"]
+opt-level = 3
+
+[workspace]
+resolver = "2"
 members = [
     "blockchain_p",
     "guess_this",
@@ -9,4 +15,5 @@ members = [
     "sha1",
     "webbest_socket",
     "number_regn",
+    "proc_m",
 ]
