@@ -15,5 +15,5 @@ members = [
     "sha1",
     "webbest_socket",
     "number_regn",
-    "proc_m",
+    "proc_m", "playground",
 ]

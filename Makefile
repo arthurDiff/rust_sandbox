@@ -14,3 +14,5 @@ b_math:
 	cargo run -p brain_math
 num_regn:
 	cargo run -p number_regn
+pg:
+	cargo run -p playground
