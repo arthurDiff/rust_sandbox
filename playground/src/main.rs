@@ -1,22 +1,20 @@
 fn main() {
-    println!("{:?}", make_smallest_palindrome("egcfe".to_owned()));
-    println!("{:?}", make_smallest_palindrome("abcd".to_owned()));
-    println!("{:?}", make_smallest_palindrome("seven".to_owned()))
+    println!("{}", clear_digits("abc".into()));
+    println!("{}", clear_digits("cb34".into()));
 }
 
-pub fn make_smallest_palindrome(s: String) -> String {
-    let mut chars = s.chars().collect::<Vec<char>>();
-    let char_len = chars.len();
-    (0..=char_len / 2).for_each(|idx| {
-        let (lhs, rhs) = (chars[idx], chars[char_len - 1 - idx]);
-        if lhs == rhs {
-            return;
-        }
-        if lhs > rhs {
-            chars[idx] = chars[char_len - 1 - idx]
+pub fn clear_digits(s: String) -> String {
+    let mut cs = vec![];
+    let chars = s.chars();
+    for c in chars {
+        if c.is_ascii_digit() {
+            if cs.is_empty() {
+                continue;
+            }
+            _ = cs.pop()
         } else {
-            chars[char_len - 1 - idx] = chars[idx]
+            cs.push(c)
         }
-    });
-    chars.iter().collect()
+    }
+    cs.iter().collect()
 }
