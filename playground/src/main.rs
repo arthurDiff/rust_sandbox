@@ -12,9 +12,8 @@ pub fn clear_digits(s: String) -> String {
                 continue;
             }
             _ = cs.pop()
-        } else {
-            cs.push(c)
         }
+        cs.push(c)
     }
     cs.iter().collect()
 }
