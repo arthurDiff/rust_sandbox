@@ -29,6 +29,13 @@ fn swap_to_8(v: &mut Box<u8>) {
 }
 
 #[allow(dead_code)]
+fn swap_to_888(v: &mut Box<usize>) -> Box<usize> {
+    let mut another = Box::new(888);
+    std::mem::swap(&mut another, v);
+    another
+}
+
+#[allow(dead_code)]
 union MyUnion {
     f1: u8,
     f2: u16,
