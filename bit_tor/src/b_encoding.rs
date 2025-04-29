@@ -38,12 +38,22 @@ impl BEncoding {
                 .cloned()
                 .collect::<Vec<u8>>(),
         )
-        .parse::<i128>()
-        .map_err(|err| Box::new(err))?)
+        .parse::<i128>()?)
     }
 
     // string decoder
     fn decode_byte_arr(b_iter: &mut Iter<u8>) -> Result<String> {
-        todo!()
+        let b_len = String::from_utf8(
+            b_iter
+                .take_while(|v| **v != BYTE_ARR_DIVIDER)
+                .cloned()
+                .collect(),
+        )?
+        .parse::<usize>()?;
+
+        // move over ':'
+        _ = b_iter.next();
+
+        Ok(String::from_utf8(b_iter.take(b_len).cloned().collect())?)
     }
 }
