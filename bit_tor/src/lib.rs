@@ -1,1 +1,3 @@
-pub mod b_encoding;
+mod b_encoding;
+
+pub use b_encoding::{decoder::*, encoder::*};
