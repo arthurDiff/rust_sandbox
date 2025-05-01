@@ -16,3 +16,5 @@ num_regn:
 	cargo run -p number_regn
 pg:
 	cargo run -p playground
+bt:
+	cargo run -p bit_tor

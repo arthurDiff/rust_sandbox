@@ -1,4 +1,4 @@
-[provile.dev]
+[profile.dev]
 opt-level = 1
 
 [profile.dev.package."*"]
@@ -15,5 +15,6 @@ members = [
     "sha1",
     "webbest_socket",
     "number_regn",
-    "proc_m", "playground",
+    "proc_m",
+    "playground", "bit_tor",
 ]
