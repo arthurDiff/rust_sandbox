@@ -11,7 +11,7 @@ const ARRAY_END: u8 = b'e';
 const NUM_START: u8 = b'i';
 const NUM_END: u8 = b'e';
 
-const STRING_DIVIDER: u8 = b':';
+const BYTE_ARRAY_DIVIDER: u8 = b':';
 
 /* Example Encoding
 d
@@ -49,7 +49,7 @@ impl Encoder {
     fn encode_next(buf: Vec<u8>, value: &Value) -> Result<Vec<u8>> {
         match value {
             Value::Number(num_v) => Self::encode_number(buf, num_v),
-            Value::String(str_v) => Self::encode_string(buf, str_v),
+            Value::Bytes(str_v) => Self::encode_byte_array(buf, str_v),
             Value::Array(arr) => Self::encode_array(buf, arr),
             Value::Object(dict) => Self::encode_dict(buf, dict),
             Value::Null => Ok(buf),
@@ -92,7 +92,7 @@ impl Encoder {
         Ok(buf)
     }
 
-    fn encode_string(mut buf: Vec<u8>, value: &str) -> Result<Vec<u8>> {
+    fn encode_byte_array(mut buf: Vec<u8>, value: &Vec<u8>) -> Result<Vec<u8>> {
         let byte_len = value.len();
         buf.append(
             &mut byte_len
@@ -102,8 +102,8 @@ impl Encoder {
                 .cloned()
                 .collect::<Vec<u8>>(),
         );
-        buf.push(STRING_DIVIDER);
-        buf.append(&mut value.as_bytes().iter().cloned().collect::<Vec<u8>>());
+        buf.push(BYTE_ARRAY_DIVIDER);
+        buf.append(&mut value.clone());
 
         Ok(buf)
     }

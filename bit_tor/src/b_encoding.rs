@@ -7,7 +7,8 @@ pub mod encoder;
 pub enum Value {
     Null,
     Number(i128),
-    String(String),
+    // utf-8 str or others
+    Bytes(Vec<u8>),
     Array(Vec<Value>),
     Object(IndexMap<String, Value>),
 }
