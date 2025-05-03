@@ -1,20 +1,18 @@
-use std::{error::Error, iter::Peekable, slice::Iter};
+use std::{iter::Peekable, slice::Iter};
 
-use super::Value;
+use super::{super::Result, Value};
 use indexmap::IndexMap;
 
 const DICT_START: u8 = b'd';
 const DICT_END: u8 = b'e';
 
-const LIST_START: u8 = b'l';
-const LIST_END: u8 = b'e';
+const ARRAY_START: u8 = b'l';
+const ARRAY_END: u8 = b'e';
 
 const NUM_START: u8 = b'i';
 const NUM_END: u8 = b'e';
 
-const BYTE_ARR_DIVIDER: u8 = b':';
-
-type Result<T> = std::result::Result<T, Box<dyn Error>>;
+const STRING_DIVIDER: u8 = b':';
 
 /* Example Encoding
 d
@@ -57,9 +55,9 @@ impl Decoder {
 
         Ok(match **next_b {
             DICT_START => Value::Object(Self::decode_dict(b_iter)?),
-            LIST_START => Value::List(Self::decode_list(b_iter)?),
+            ARRAY_START => Value::Array(Self::decode_array(b_iter)?),
             NUM_START => Value::Number(Self::decode_number(b_iter)?),
-            _ => Value::String(Self::decode_byte_arr(b_iter)?),
+            _ => Value::String(Self::decode_string(b_iter)?),
         })
     }
 
@@ -75,20 +73,20 @@ impl Decoder {
                 break;
             }
 
-            idx_map.insert(Self::decode_byte_arr(b_iter)?, Self::decode_next(b_iter)?);
+            idx_map.insert(Self::decode_string(b_iter)?, Self::decode_next(b_iter)?);
         }
 
         Ok(idx_map)
     }
 
-    fn decode_list(b_iter: &mut Peekable<Iter<u8>>) -> Result<Vec<Value>> {
-        // move over LIST_START
+    fn decode_array(b_iter: &mut Peekable<Iter<u8>>) -> Result<Vec<Value>> {
+        // move over ARRAY_START
         _ = b_iter.next();
 
         let mut list = vec![];
         while let Some(b) = b_iter.peek() {
-            if **b == LIST_END {
-                // move over LIST_END
+            if **b == ARRAY_END {
+                // move over ARRAY_END
                 _ = b_iter.next();
                 break;
             }
@@ -119,10 +117,10 @@ impl Decoder {
     }
 
     // string decoder
-    fn decode_byte_arr(b_iter: &mut Peekable<Iter<u8>>) -> Result<String> {
+    fn decode_string(b_iter: &mut Peekable<Iter<u8>>) -> Result<String> {
         let b_len = String::from_utf8(
             b_iter
-                .take_while(|v| **v != BYTE_ARR_DIVIDER)
+                .take_while(|v| **v != STRING_DIVIDER)
                 .cloned()
                 .collect(),
         )?
@@ -132,5 +130,19 @@ impl Decoder {
         _ = b_iter.next();
 
         Ok(String::from_utf8(b_iter.take(b_len).cloned().collect())?)
+    }
+}
+
+mod test {
+    #[allow(unused_imports)]
+    use super::*;
+
+    #[test]
+    fn should_decode_b_encoded_bytes_correctly() {
+        let sample_encoded_bytes = r#"d8:announce33:http://192.168.1.74:6969/announce7:comment17:Comment goes here10:created by25:Transmission/2.92 (14714)13:creation datei1460444420e8:encoding5:UTF-84:infod6:lengthi59616e4:name9:lorem.txt12:piece lengthi32768e6:pieces40:L@fR���3�K*Ez�>_YS��86��"�&�p�<�6�C{�9G7:privatei0eee"#.as_bytes();
+
+        let value = Decoder::decode(sample_encoded_bytes).unwrap();
+
+        assert!(matches!(value, Value::Object(_)));
     }
 }
