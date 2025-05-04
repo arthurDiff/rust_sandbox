@@ -54,10 +54,10 @@ impl Decoder {
         };
 
         Ok(match **next_b {
-            DICT_START => dbg!(Value::Object(Self::decode_dict(b_iter)?)),
-            ARRAY_START => dbg!(Value::Array(Self::decode_array(b_iter)?)),
-            NUM_START => dbg!(Value::Number(Self::decode_number(b_iter)?)),
-            _ => dbg!(Value::Bytes(Self::decode_byte_array(b_iter)?)),
+            DICT_START => Value::Object(Self::decode_dict(b_iter)?),
+            ARRAY_START => Value::Array(Self::decode_array(b_iter)?),
+            NUM_START => Value::Number(Self::decode_number(b_iter)?),
+            _ => Value::Bytes(Self::decode_byte_array(b_iter)?),
         })
     }
 
@@ -74,8 +74,8 @@ impl Decoder {
             }
 
             idx_map.insert(
-                dbg!(String::from_utf8(Self::decode_byte_array(b_iter)?)?),
-                dbg!(Self::decode_next(b_iter)?),
+                String::from_utf8(Self::decode_byte_array(b_iter)?)?,
+                Self::decode_next(b_iter)?,
             );
         }
 
@@ -134,14 +134,12 @@ mod test {
     #[allow(unused_imports)]
     use super::*;
 
-    #[ignore]
     #[test]
     fn should_decode_b_encoded_bytes_correctly() {
-        let sample_encoded_bytes = r#"d8:announce33:http://192.168.1.74:6969/announce7:comment17:Comment goes here10:created by25:Transmission/2.92 (14714)13:creation datei1460444420e8:encoding5:UTF-84:infod6:lengthi59616e4:name9:lorem.txt12:piece lengthi32768e6:pieces40:L@fR���3�K*Ez�>_YS��86��"�&�p�<�6�C{�9G7:privatei0eee"#.as_bytes();
+        let sample_encoded_bytes = r#"d8:announce33:http://192.168.1.74:6969/announce7:comment17:Comment goes here10:created by25:Transmission/2.92 (14714)13:creation datei1460444420e8:encoding5:UTF-84:infod6:lengthi59616e4:name9:lorem.txt12:piece lengthi32768e7:privatei0eee"#.as_bytes();
 
         let value = Decoder::decode(sample_encoded_bytes).unwrap();
-        println!("{:?}", value);
 
-        assert!(matches!(value, Value::Object(_)));
+        assert!(matches!(value, Value::Object(obj) if obj.iter().len() == 6));
     }
 }

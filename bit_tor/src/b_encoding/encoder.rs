@@ -60,7 +60,8 @@ impl Encoder {
         buf.push(DICT_START);
 
         for (k, v) in value {
-            buf.append(&mut k.as_bytes().iter().cloned().collect::<Vec<u8>>());
+            // buf.append(&mut k.as_bytes().iter().cloned().collect::<Vec<u8>>());
+            buf = Self::encode_byte_array(buf, k.as_bytes())?;
             buf = Self::encode_next(buf, v)?;
         }
 
@@ -92,7 +93,7 @@ impl Encoder {
         Ok(buf)
     }
 
-    fn encode_byte_array(mut buf: Vec<u8>, value: &Vec<u8>) -> Result<Vec<u8>> {
+    fn encode_byte_array(mut buf: Vec<u8>, value: &[u8]) -> Result<Vec<u8>> {
         let byte_len = value.len();
         buf.append(
             &mut byte_len
@@ -103,7 +104,7 @@ impl Encoder {
                 .collect::<Vec<u8>>(),
         );
         buf.push(BYTE_ARRAY_DIVIDER);
-        buf.append(&mut value.clone());
+        buf.append(&mut value.iter().cloned().collect::<Vec<u8>>());
 
         Ok(buf)
     }
@@ -112,4 +113,32 @@ impl Encoder {
 mod test {
     #[allow(unused_imports)]
     use super::*;
+
+    #[test]
+    fn should_encode_value_collectly() {
+        let sample_value = Value::Object(IndexMap::from([
+            ("test1".into(), Value::Number(2783)),
+            (
+                "test2".into(),
+                Value::Bytes(vec![116, 104, 105, 115, 105, 115, 116, 101, 115, 116]),
+            ),
+            (
+                "test3".into(),
+                Value::Object(IndexMap::from([(
+                    "innertest".into(),
+                    Value::Array(vec![
+                        Value::Number(787),
+                        Value::Bytes(vec![116, 104, 105, 115]),
+                    ]),
+                )])),
+            ),
+        ]));
+
+        let encoded_bytes = Encoder::encode(&sample_value).unwrap();
+
+        assert_eq!(
+            String::from_utf8(encoded_bytes).unwrap(),
+            "d5:test1i2783e5:test210:thisistest5:test3d9:innertestli787e4:thiseee"
+        )
+    }
 }
