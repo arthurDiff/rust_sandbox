@@ -25,7 +25,7 @@ d
     d
       6:length          i59616e
       4:name            9:lorem.txt
-      12:piece length   i32768e
+      12:piece length   i64768e
       6:pieces          40:L@fR���3�K*Ez�>_YS��86��"�&�p�<�6�C{�9G
       7:private         i0e
     e
@@ -101,7 +101,7 @@ impl Decoder {
     }
 
     // number decoder
-    fn decode_number(b_iter: &mut Peekable<Iter<u8>>) -> Result<i128> {
+    fn decode_number(b_iter: &mut Peekable<Iter<u8>>) -> Result<i64> {
         // move over NUM_START
         _ = b_iter.next();
 
@@ -111,7 +111,7 @@ impl Decoder {
                 .cloned()
                 .collect::<Vec<u8>>(),
         )
-        .parse::<i128>()?;
+        .parse::<i64>()?;
 
         Ok(n)
     }
@@ -136,7 +136,7 @@ mod test {
 
     #[test]
     fn should_decode_b_encoded_bytes_correctly() {
-        let sample_encoded_bytes = r#"d8:announce33:http://192.168.1.74:6969/announce7:comment17:Comment goes here10:created by25:Transmission/2.92 (14714)13:creation datei1460444420e8:encoding5:UTF-84:infod6:lengthi59616e4:name9:lorem.txt12:piece lengthi32768e7:privatei0eee"#.as_bytes();
+        let sample_encoded_bytes = r#"d8:announce33:http://192.168.1.74:6969/announce7:comment17:Comment goes here10:created by25:Transmission/2.92 (14714)13:creation datei1460444420e8:encoding5:UTF-84:infod6:lengthi59616e4:name9:lorem.txt12:piece lengthi64768e7:privatei0eee"#.as_bytes();
 
         let value = Decoder::decode(sample_encoded_bytes).unwrap();
 

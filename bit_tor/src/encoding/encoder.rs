@@ -78,7 +78,7 @@ impl Encoder {
         Ok(buf)
     }
 
-    fn encode_number(mut buf: Vec<u8>, value: &i128) -> Result<Vec<u8>> {
+    fn encode_number(mut buf: Vec<u8>, value: &i64) -> Result<Vec<u8>> {
         buf.push(NUM_START);
         buf.append(
             &mut value
